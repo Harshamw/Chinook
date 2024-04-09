@@ -21,7 +21,7 @@
 
 @if (Playlist == null)
 {
-     <Loading />
+    <Loading />
 }
 else
 {
@@ -30,7 +30,7 @@ else
             <tr>
                 <th>Track</th>
                 <th></th>
-        </tr>
+            </tr>
         </thead>
         <tbody>
             @foreach (var track in Playlist.Tracks)
@@ -122,7 +122,6 @@ else
     private void RemoveTrack(long trackId)
     {
         // TODO
-        s
         CloseInfoMessage();
     }
 

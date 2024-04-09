@@ -7,7 +7,7 @@
 <PageTitle>Index</PageTitle>
 
 <h1>Artists</h1>
-
+<input type="text" class="form-control" placeholder="Search" @oninput="SearchArtistsByName" />
 @if (Artists == null)
 {
     <Loading />
@@ -22,7 +22,8 @@ else
             </tr>
         </thead>
         <tbody>
-            @foreach (var artist in Artists)
+            <!-- Loop through artists, filtering by name containing the search term (case-insensitive) -->
+            @foreach (var artist in Artists.Where(a => a.Name.ToLower().Contains((SearchTerm ?? "").ToLower())))
             {
                 <tr>
                     <td><a href="Artist/@artist.ArtistId">@artist.Name</a></td>
@@ -35,18 +36,25 @@ else
 
 @code {
     private List<Artist> Artists;
+    private string SearchTerm { get; set; }
     [Inject] IDbContextFactory<ChinookContext> DbFactory { get; set; }
 
-    protected override async Task OnInitializedAsync() {
+    private async Task SearchArtistsByName(ChangeEventArgs e)
+    {
+        SearchTerm = e.Value.ToString();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
         await InvokeAsync(StateHasChanged);
         Artists = await GetArtists();
     }
 
     public async Task<List<Artist>> GetArtists()
-    {   
+    {
         var dbContext = await DbFactory.CreateDbContextAsync();
         var users = dbContext.Users.Include(a => a.UserPlaylists).ToList();
-        
+
         return dbContext.Artists.ToList();
     }
 
@@ -54,5 +62,17 @@ else
     {
         var dbContext = await DbFactory.CreateDbContextAsync();
         return dbContext.Albums.Where(a => a.ArtistId == artistId).ToList();
+    }
+
+    public async Task<List<Artist>> SearchArtistsByName(string searchTerm)
+    {
+        var dbContext = await DbFactory.CreateDbContextAsync();
+
+        // Filter artists by name containing the search term in a case-insensitive manner
+        var matchingArtists = dbContext.Artists
+            .Where(a => a.Name.ToLower().Contains(searchTerm.ToLower()))
+            .ToList();
+
+        return matchingArtists;
     }
 }

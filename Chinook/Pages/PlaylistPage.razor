@@ -1,14 +1,15 @@
-﻿@page "/playlist/{PlaylistId:long}"
+﻿@page "/playlist/{ArtistId:long}"
 @attribute [Authorize]
 
+@using Chinook.ClientModels
 @using Chinook.Models
 @using Microsoft.EntityFrameworkCore
 @using System.Security.Claims;
 
-<h1>Playlist <strong>@Playlist.Name</strong></h1>
+@* <h1>Playlist <strong>@Playlist.Name</strong></h1> *@
 
 @if (!string.IsNullOrWhiteSpace(InfoMessage))
-{
+    {
     <div class="alert alert-info fade show">
         <div class="d-flex align-items-start">
             <div class="flex-grow-1">
@@ -17,51 +18,35 @@
             <button type="button" class="btn-close" aria-label="Close" @onclick="CloseInfoMessage"></button>
         </div>
     </div>
-}
+    }
 
-@if (Playlist == null)
-{
+@if (Tracks == null)
+    {
     <Loading />
-}
+    }
 else
-{
+    {
     <table class="table table-striped table-hover table-sm">
         <thead>
             <tr>
+                <th>Playlist</th>
                 <th>Track</th>
                 <th></th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var track in Playlist.Tracks)
-            {
+            @foreach (var track in Tracks)
+                {
                 <tr>
+                    <td>@track.PlaylistName</td>
                     <td>@track.ArtistName - @track.AlbumTitle - @track.TrackName</td>
-                    <td>
-                        <div class="d-flex">
-                            @if (Playlist.Name != "Favorite")
-                            {
-                                @if (track.IsFavorite)
-                                {
-                                    <a href="#" class="m-1" title="Unark as favorite" @onclick="@(() => UnfavoriteTrack(track.TrackId))" @onclick:preventDefault><i class="bi bi-star-fill"></i></a>
-                                }
-                                else
-                                {
-                                    <a href="#" class="m-1" title="Mark as favorite" @onclick="@(() => FavoriteTrack(track.TrackId))" @onclick:preventDefault><i class="bi bi-star"></i></a>
-                                }
-
-                            }
-                            <a href="#" class="m-1" title="Remove from this playlist" @onclick="@(() => RemoveTrack(track.TrackId))" @onclick:preventDefault><i class="bi bi-trash"></i></a>
-                        </div>
-                    </td>
                 </tr>
-            }
+                }
         </tbody>
     </table>
-}
+    }
 
 @code {
-    [Parameter] public long PlaylistId { get; set; }
     [Inject] IDbContextFactory<ChinookContext> DbFactory { get; set; }
     [CascadingParameter] private Task<AuthenticationState> authenticationState { get; set; }
 
@@ -69,65 +54,53 @@ else
     private string CurrentUserId;
     private string InfoMessage;
 
+    // Artist id is required to get the tracks of that artist
+    [Parameter] public long ArtistId { get; set; }
+    // To get the artist details
+    private Artist Artist;
+    // To get list of tracks
+    private List<ClientModels.TrackPlaylist> Tracks;
+
     protected override async Task OnInitializedAsync()
-    {
+        {
         CurrentUserId = await GetUserId();
 
         await InvokeAsync(StateHasChanged);
-        var DbContext = await DbFactory.CreateDbContextAsync();
 
-        Playlist = DbContext.Playlists
-            .Include(a => a.Tracks).ThenInclude(a => a.Album).ThenInclude(a => a.Artist)
-            .Where(p => p.PlaylistId == PlaylistId)
-            .Select(p => new ClientModels.Playlist()
-                {
-                    Name = p.Name,
-                    Tracks = p.Tracks.Select(t => new ClientModels.PlaylistTrack()
-                    {
-                        AlbumTitle = t.Album.Title,
-                        ArtistName = t.Album.Artist.Name,
-                        TrackId = t.TrackId,
-                        TrackName = t.Name,
-                        IsFavorite = t.Playlists.Where(p => p.UserPlaylists.Any(up => up.UserId == CurrentUserId && up.Playlist.Name == "Favorites")).Any()
-                    }).ToList()
-                })
-            .FirstOrDefault();
-    }
+        // Get db context
+        var DbContext = await DbFactory.CreateDbContextAsync();
+        // get the artist details using artist Id
+        Artist = DbContext.Artists.SingleOrDefault(a => a.ArtistId == ArtistId);
+        // Get the list of tracks for that user and which are not in Favourites
+        var tracks = (from up in DbContext.UserPlaylists
+                      join pt in DbContext.PlaylistTracks on up.PlaylistId equals pt.PlaylistId
+                      join t in DbContext.Tracks on pt.TrackId equals t.TrackId
+                      join a in DbContext.Albums on t.AlbumId equals a.AlbumId
+                      where up.UserId == CurrentUserId
+                      && a.ArtistId == Artist.ArtistId && up.Playlist.Name != Constants.DEFAULT_PLAYLIST
+                      select new TrackPlaylist
+                          {
+                          PlaylistName = up.Playlist.Name,
+                          TrackName = t.Name,
+                          TrackId=t.TrackId,
+                          AlbumTitle=a.Title,
+                          ArtistName=a.Artist.Name
+                          }).Distinct();
+        // add list in tracks
+        Tracks = tracks.ToList();
+
+        }
 
     private async Task<string> GetUserId()
-    {
+        {
         var user = (await authenticationState).User;
         var userId = user.FindFirst(u => u.Type.Contains(ClaimTypes.NameIdentifier))?.Value;
         return userId;
-    }
-
-    private void FavoriteTrack(long trackId)
-    {
-        var track = Playlist.Tracks.FirstOrDefault(t => t.TrackId == trackId);
-
-        // TODO: add track to Favorites playlist
-
-        InfoMessage = $"Track {track.ArtistName} - {track.AlbumTitle} - {track.TrackName} added to playlist Favorites.";
-    }
-
-    private void UnfavoriteTrack(long trackId)
-    {
-        var track = Playlist.Tracks.FirstOrDefault(t => t.TrackId == trackId);
-
-        // TODO: remove track from Favorites playlist
-
-        InfoMessage = $"Track {track.ArtistName} - {track.AlbumTitle} - {track.TrackName} removed from playlist Favorites.";
-    }
-
-    private void RemoveTrack(long trackId)
-    {
-        // TODO
-        CloseInfoMessage();
-    }
+        }
 
     private void CloseInfoMessage()
-    {
+        {
         InfoMessage = "";
-    }
+        }
 
 }

@@ -13,11 +13,11 @@
     }
 </style>
 @if (Artist == null)
-    {
+{
     <Loading />
-    }
+}
 else
-    {
+{
     <h1>@Artist.Name</h1>
     <table class="table table-striped table-hover table-sm">
         <thead>
@@ -29,15 +29,15 @@ else
         </thead>
         <tbody>
             @foreach (var track in Tracks)
-                {
+            {
                 <tr>
                     <td>@track.AlbumTitle</td>
                     <td>@track.TrackName</td>
                 </tr>
-                }
+            }
         </tbody>
     </table>
-    }
+}
 
 @code {
     [Parameter] public long ArtistId { get; set; }
@@ -51,7 +51,7 @@ else
     private string CurrentUserId;
 
     protected override async Task OnInitializedAsync()
-        {
+    {
         await InvokeAsync(StateHasChanged);
         CurrentUserId = await GetUserId();
         // Get db context
@@ -66,25 +66,25 @@ else
                       where up.UserId == CurrentUserId
                       && a.ArtistId == Artist.ArtistId && up.Playlist.Name == Constants.DEFAULT_PLAYLIST
                       select new TrackPlaylist
-                              {
+                          {
                               PlaylistName = up.Playlist.Name,
                               TrackName = t.Name,
                               TrackId = t.TrackId,
                               AlbumTitle = a.Title,
                               ArtistName = a.Artist.Name
-                              }).Distinct();
+                          }).Distinct();
 
         Tracks = tracks.ToList();
-        }
+    }
     /// <summary>
     /// To get the User details using userId
     /// </summary>
     /// <returns></returns>
     private async Task<string> GetUserId()
-        {
+    {
         var user = (await authenticationState).User;
         var userId = user.FindFirst(u => u.Type.Contains(ClaimTypes.NameIdentifier))?.Value;
         return userId;
-        }
+    }
 
 }

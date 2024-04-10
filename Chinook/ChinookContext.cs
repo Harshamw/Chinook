@@ -4,6 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Chinook.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Chinook.ClientModels;
+using Playlist = Chinook.Models.Playlist;
+using PlaylistTracks = Chinook.Models.PlaylistTracks;
 
 namespace Chinook;
 
@@ -27,6 +30,7 @@ public partial class ChinookContext : IdentityDbContext<ChinookUser>
     public virtual DbSet<InvoiceLine> InvoiceLines { get; set; } = null!;
     public virtual DbSet<MediaType> MediaTypes { get; set; } = null!;
     public virtual DbSet<Playlist> Playlists { get; set; } = null!;
+    public DbSet<PlaylistTracks> PlaylistTracks { get; set; }=null!;
     public virtual DbSet<Track> Tracks { get; set; } = null!;
     public virtual DbSet<UserPlaylist> UserPlaylists { get; set; } = null!;
 
@@ -284,6 +288,51 @@ public partial class ChinookContext : IdentityDbContext<ChinookUser>
                 .WithMany(u => u.UserPlaylists)
                 .HasForeignKey(up => up.PlaylistId);
         });
+        //modelBuilder.Entity<Models.PlaylistTrack>(entity =>
+        //{
+        //    entity.ToTable("PlaylistTrack");
+        //    entity.HasKey(bc => new { bc.PlaylistId, bc.TrackId });
+
+        //    entity.HasOne(up => up.Playlists)
+        //        .WithMany(u => u.PlaylistTracks)
+        //        .HasForeignKey(up => up.PlaylistId);
+
+        //    entity.HasOne(up => up.Track)
+        //        .WithMany(u => u.PlaylistTracks)
+        //        .HasForeignKey(up => up.TrackId);
+        //});
+        //modelBuilder.Entity<PlaylistTrack>()
+        //   .HasKey(pt => new { pt.PlaylistId, pt.TrackId });
+
+        //modelBuilder.Entity<PlaylistTrack>()
+        //    .HasOne(pt => pt.Playlists)
+        //    .WithMany(p => p.PlaylistTracks)
+        //    .HasForeignKey(pt => pt.PlaylistId);
+
+        //modelBuilder.Entity<PlaylistTrack>()
+        //    .HasOne(pt => pt.Track)
+        //    .WithMany(t => t.PlaylistTracks)
+        //    .HasForeignKey(pt => pt.TrackId);
+    modelBuilder.Entity<PlaylistTracks>()
+
+     .HasKey(pt => new { pt.PlaylistId, pt.TrackId });
+
+        modelBuilder.Entity<PlaylistTracks>()
+
+             .HasOne(pt => pt.Playlists)
+
+             .WithMany(p => p.PlaylistTracks)
+
+             .HasForeignKey(pt => pt.PlaylistId);
+
+        modelBuilder.Entity<PlaylistTracks>()
+
+             .HasOne(pt => pt.Track)
+
+             .WithMany(t => t.PlaylistTracks)
+
+             .HasForeignKey(pt => pt.TrackId);
+
 
         OnModelCreatingPartial(modelBuilder);
 

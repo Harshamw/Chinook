@@ -337,7 +337,7 @@ namespace Chinook.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "PlaylistTrack",
+                name: "TrackPlaylist",
                 columns: table => new
                 {
                     PlaylistId = table.Column<long>(type: "INTEGER", nullable: false),
@@ -452,7 +452,7 @@ namespace Chinook.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IFK_PlaylistTrackTrackId",
-                table: "PlaylistTrack",
+                table: "TrackPlaylist",
                 column: "TrackId");
 
             migrationBuilder.CreateIndex(
@@ -492,7 +492,7 @@ namespace Chinook.Migrations
                 name: "InvoiceLine");
 
             migrationBuilder.DropTable(
-                name: "PlaylistTrack");
+                name: "TrackPlaylist");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");

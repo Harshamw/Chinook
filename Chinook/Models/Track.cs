@@ -27,5 +27,7 @@ namespace Chinook.Models
         public virtual ICollection<InvoiceLine> InvoiceLines { get; set; }
 
         public virtual ICollection<Playlist> Playlists { get; set; }
+        public virtual ICollection<PlaylistTracks> PlaylistTracks { get; set; }
+
+        }
     }
-}

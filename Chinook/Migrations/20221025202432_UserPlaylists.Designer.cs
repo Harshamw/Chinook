@@ -515,7 +515,7 @@ namespace Chinook.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("PlaylistTrack", b =>
+            modelBuilder.Entity("TrackPlaylist", b =>
                 {
                     b.Property<long>("PlaylistId")
                         .HasColumnType("INTEGER");
@@ -527,7 +527,7 @@ namespace Chinook.Migrations
 
                     b.HasIndex(new[] { "TrackId" }, "IFK_PlaylistTrackTrackId");
 
-                    b.ToTable("PlaylistTrack", (string)null);
+                    b.ToTable("TrackPlaylist", (string)null);
                 });
 
             modelBuilder.Entity("Chinook.Models.Album", b =>
@@ -677,7 +677,7 @@ namespace Chinook.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("PlaylistTrack", b =>
+            modelBuilder.Entity("TrackPlaylist", b =>
                 {
                     b.HasOne("Chinook.Models.Playlist", null)
                         .WithMany()
